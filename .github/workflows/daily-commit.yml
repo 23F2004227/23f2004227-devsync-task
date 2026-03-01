@@ -1,0 +1,34 @@
+name: Daily Auto Commit
+
+on:
+  schedule:
+    # Runs every day at 05:30 UTC (change minutes/hour as needed; avoid *:00 or *:30 if you want to avoid peak load)
+    - cron: '30 5 * * *'      # 05:30 UTC = e.g. 11:00 IST, adjust to your preferred time
+  workflow_dispatch:          # Allows manual trigger from Actions tab for testing
+
+jobs:
+  auto-commit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write        # Required to allow the workflow to push commits
+
+    steps:
+      - name: Checkout repository  # Step with your required email in name
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0       # Important: full history so we can commit properly
+
+      - name: Setup git config with your email 23f2004227@ds.study.iitm.ac.in
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Create or update a daily log file and commit
+        run: |
+          # Create/update a file so there is always something to commit
+          echo "Daily automated update - $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> daily-log.md
+          
+          # Stage, commit and push (only if there are changes)
+          git add daily-log.md
+          git commit -m "chore: daily automated commit $(date -u '+%Y-%m-%d')" || echo "No changes to commit"
+          git push
